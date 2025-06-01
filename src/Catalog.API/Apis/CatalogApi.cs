@@ -335,23 +335,8 @@ public static class CatalogApi
 
         catalogItem.Embedding = await services.CatalogAI.GetEmbeddingAsync(catalogItem);
 
-        var priceEntry = catalogEntry.Property(i => i.Price);
+        await services.Context.SaveChangesAsync();
 
-        if (priceEntry.IsModified) // Save product's data and publish integration event through the Event Bus if price has changed
-        {
-            //Create Integration Event to be published through the Event Bus
-            var priceChangedEvent = new ProductPriceChangedIntegrationEvent(catalogItem.Id, productToUpdate.Price, priceEntry.OriginalValue);
-
-            // Achieving atomicity between original Catalog database operation and the IntegrationEventLog thanks to a local transaction
-            await services.EventService.SaveEventAndCatalogContextChangesAsync(priceChangedEvent);
-
-            // Publish through the Event Bus and mark the saved event as published
-            await services.EventService.PublishThroughEventBusAsync(priceChangedEvent);
-        }
-        else // Just save the updated product because the Product's Price hasn't changed.
-        {
-            await services.Context.SaveChangesAsync();
-        }
         return TypedResults.Created($"/api/catalog/items/{id}");
     }
 

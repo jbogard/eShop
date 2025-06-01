@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using CardType = eShop.Ordering.API.Application.Queries.CardType;
-using Order = eShop.Ordering.API.Application.Queries.Order;
+﻿using System.Net;
+using eShop.Ordering.API.DTOs;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 public static class OrdersApi
 {
@@ -20,69 +21,88 @@ public static class OrdersApi
     }
 
     public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> CancelOrderAsync(
-        [FromHeader(Name = "x-requestid")] Guid requestId,
-        CancelOrderCommand command,
+        CancelOrderModel model,
         [AsParameters] OrderServices services)
     {
-        if (requestId == Guid.Empty)
+        var order = await services.DbContext.Orders.FindAsync(model.OrderNumber);
+
+        if (order != null)
         {
-            return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+            await services.DbContext.Orders.Entry(order)
+                .Collection(i => i.OrderItems).LoadAsync();
         }
 
-        var requestCancelOrder = new IdentifiedCommand<CancelOrderCommand, bool>(command, requestId);
-
-        services.Logger.LogInformation(
-            "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
-            requestCancelOrder.GetGenericTypeName(),
-            nameof(requestCancelOrder.Command.OrderNumber),
-            requestCancelOrder.Command.OrderNumber,
-            requestCancelOrder);
-
-        var commandResult = await services.Mediator.Send(requestCancelOrder);
-
-        if (!commandResult)
+        if (order == null)
         {
-            return TypedResults.Problem(detail: "Cancel order failed to process.", statusCode: 500);
+            return TypedResults.Problem(detail: "Cancel order failed to process.",
+                statusCode: (int?)HttpStatusCode.BadRequest);
         }
+
+        order.OrderStatus = OrderStatus.Cancelled;
+
+        await services.DbContext.SaveChangesAsync();
 
         return TypedResults.Ok();
     }
 
     public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> ShipOrderAsync(
-        [FromHeader(Name = "x-requestid")] Guid requestId,
-        ShipOrderCommand command,
+        ShipOrderModel model,
         [AsParameters] OrderServices services)
     {
-        if (requestId == Guid.Empty)
+        var order = await services.DbContext.Orders.FindAsync(model.OrderNumber);
+
+        if (order != null)
         {
-            return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+            await services.DbContext.Orders.Entry(order)
+                .Collection(i => i.OrderItems).LoadAsync();
         }
 
-        var requestShipOrder = new IdentifiedCommand<ShipOrderCommand, bool>(command, requestId);
-
-        services.Logger.LogInformation(
-            "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
-            requestShipOrder.GetGenericTypeName(),
-            nameof(requestShipOrder.Command.OrderNumber),
-            requestShipOrder.Command.OrderNumber,
-            requestShipOrder);
-
-        var commandResult = await services.Mediator.Send(requestShipOrder);
-
-        if (!commandResult)
+        if (order == null)
         {
-            return TypedResults.Problem(detail: "Ship order failed to process.", statusCode: 500);
+            return TypedResults.BadRequest("Cannot find order");
         }
+
+        order.OrderStatus = OrderStatus.Shipped;
+
+        await services.DbContext.SaveChangesAsync();
 
         return TypedResults.Ok();
     }
 
-    public static async Task<Results<Ok<Order>, NotFound>> GetOrderAsync(int orderId, [AsParameters] OrderServices services)
+    public static async Task<Results<Ok<OrderDto>, NotFound>> GetOrderAsync(int orderId,
+        [AsParameters] OrderServices services)
     {
         try
         {
-            var order = await services.Queries.GetOrderAsync(orderId);
-            return TypedResults.Ok(order);
+            var order = await services.DbContext
+                .Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order is null)
+                throw new KeyNotFoundException();
+
+            var dto = new OrderDto
+            {
+                OrderNumber = order.Id,
+                Date = order.OrderDate,
+                Description = order.Description,
+                City = order.Address.City,
+                Country = order.Address.Country,
+                State = order.Address.State,
+                Street = order.Address.Street,
+                Zipcode = order.Address.ZipCode,
+                Status = order.OrderStatus.ToString(),
+                Total = OrderManager.GetTotal(order),
+                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+                {
+                    ProductName = oi.ProductName,
+                    Units = oi.Units,
+                    UnitPrice = (double)oi.UnitPrice,
+                    PictureUrl = oi.PictureUrl
+                }).ToList()
+            };
+            return TypedResults.Ok(dto);
         }
         catch
         {
@@ -90,96 +110,120 @@ public static class OrdersApi
         }
     }
 
-    public static async Task<Ok<IEnumerable<OrderSummary>>> GetOrdersByUserAsync([AsParameters] OrderServices services)
+    public static async Task<Ok<IEnumerable<OrderSummaryDto>>> GetOrdersByUserAsync(
+        [AsParameters] OrderServices services)
     {
         var userId = services.IdentityService.GetUserIdentity();
-        var orders = await services.Queries.GetOrdersFromUserAsync(userId);
+        IEnumerable<OrderSummaryDto> orders = await services.DbContext
+            .Orders
+            .Where(o => o.Buyer.IdentityGuid == userId)
+            .Select(o => new OrderSummaryDto
+            {
+                OrderNumber = o.Id,
+                Date = o.OrderDate,
+                Status = o.OrderStatus.ToString(),
+                Total = (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units)
+            })
+            .ToListAsync();
+
         return TypedResults.Ok(orders);
     }
 
-    public static async Task<Ok<IEnumerable<CardType>>> GetCardTypesAsync(IOrderQueries orderQueries)
+    public static async Task<Ok<IEnumerable<CardTypeDto>>> GetCardTypesAsync([AsParameters] OrderServices services)
     {
-        var cardTypes = await orderQueries.GetCardTypesAsync();
+        IEnumerable<CardTypeDto> cardTypes = await services.DbContext
+            .CardTypes
+            .Select(c => new CardTypeDto { Id = c.Id, Name = c.Name })
+            .ToListAsync();
+
         return TypedResults.Ok(cardTypes);
     }
 
-    public static async Task<OrderDraftDTO> CreateOrderDraftAsync(CreateOrderDraftCommand command, [AsParameters] OrderServices services)
+    public static Task<OrderDraftModel> CreateOrderDraftAsync(CreateOrderDraftModel model,
+        [AsParameters] OrderServices services)
     {
-        services.Logger.LogInformation(
-            "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
-            command.GetGenericTypeName(),
-            nameof(command.BuyerId),
-            command.BuyerId,
-            command);
+        var order = new Order();
+        var orderItems = model.Items.Select(i => i.ToOrderItemDTO()).ToList();
+        foreach (var item in orderItems)
+        {
+            OrderManager.AddOrderItem(order, item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
+                item.PictureUrl, item.Units);
+        }
 
-        return await services.Mediator.Send(command);
+        return Task.FromResult(OrderDraftModel.FromOrder(order));
     }
 
     public static async Task<Results<Ok, BadRequest<string>>> CreateOrderAsync(
-        [FromHeader(Name = "x-requestid")] Guid requestId,
-        CreateOrderRequest request,
+        NewOrderModel model,
         [AsParameters] OrderServices services)
     {
-        
-        //mask the credit card number
-        
-        services.Logger.LogInformation(
-            "Sending command: {CommandName} - {IdProperty}: {CommandId}",
-            request.GetGenericTypeName(),
-            nameof(request.UserId),
-            request.UserId); //don't log the request as it has CC number
-
-        if (requestId == Guid.Empty)
+        var address = new Address
         {
-            services.Logger.LogWarning("Invalid IntegrationEvent - RequestId is missing - {@IntegrationEvent}", request);
-            return TypedResults.BadRequest("RequestId is missing.");
+            Street = model.Street,
+            City = model.City,
+            State = model.State,
+            Country = model.Country,
+            ZipCode = model.ZipCode
+        };
+        var order = new Order { OrderStatus = OrderStatus.Submitted, OrderDate = DateTime.UtcNow, Address = address };
+        foreach (var item in model.Items)
+        {
+            OrderManager.AddOrderItem(order, item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
+                item.PictureUrl);
         }
 
-        using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
+        await services.DbContext.Orders.AddAsync(order);
+
+        await services.DbContext.SaveChangesAsync();
+
+        var cardTypeId = model.CardTypeId != 0 ? model.CardTypeId : 1;
+        var buyer = await services.DbContext.Buyers
+            .Include(b => b.PaymentMethods)
+            .SingleOrDefaultAsync(b => b.IdentityGuid == model.UserId);
+        var buyerExisted = buyer is not null;
+
+        if (!buyerExisted)
         {
-            var maskedCCNumber = request.CardNumber.Substring(request.CardNumber.Length - 4).PadLeft(request.CardNumber.Length, 'X');
-            var createOrderCommand = new CreateOrderCommand(request.Items, request.UserId, request.UserName, request.City, request.Street,
-                request.State, request.Country, request.ZipCode,
-                maskedCCNumber, request.CardHolderName, request.CardExpiration,
-                request.CardSecurityNumber, request.CardTypeId);
-
-            var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(createOrderCommand, requestId);
-
-            services.Logger.LogInformation(
-                "Sending command: {CommandName} - {IdProperty}: {CommandId} ({@Command})",
-                requestCreateOrder.GetGenericTypeName(),
-                nameof(requestCreateOrder.Id),
-                requestCreateOrder.Id,
-                requestCreateOrder);
-
-            var result = await services.Mediator.Send(requestCreateOrder);
-
-            if (result)
-            {
-                services.Logger.LogInformation("CreateOrderCommand succeeded - RequestId: {RequestId}", requestId);
-            }
-            else
-            {
-                services.Logger.LogWarning("CreateOrderCommand failed - RequestId: {RequestId}", requestId);
-            }
-
-            return TypedResults.Ok();
+            buyer = new Buyer { IdentityGuid = model.UserId, Name = model.UserName };
         }
+
+        var payment = buyer.PaymentMethods
+            .SingleOrDefault(p => p.IsEqualTo(cardTypeId, model.CardNumber, model.CardExpiration));
+
+        if (payment == null)
+        {
+            payment = new PaymentMethod
+            {
+                CardTypeId = cardTypeId,
+                Alias = $"Payment Method on {DateTime.UtcNow}",
+                CardNumber = model.CardNumber,
+                SecurityNumber = model.CardSecurityNumber,
+                CardHolderName = model.CardHolderName,
+                Expiration = model.CardExpiration
+            };
+
+            buyer.PaymentMethods.Add(payment);
+        }
+
+        if (buyerExisted)
+        {
+            services.DbContext.Buyers.Update(buyer);
+        }
+        else
+        {
+            services.DbContext.Buyers.Add(buyer);
+        }
+
+        await services.DbContext.SaveChangesAsync();
+        
+        // Update order details with buyer information
+        order.Buyer = buyer;
+        order.PaymentId = payment.Id;
+        
+        services.DbContext.Orders.Update(order);
+
+        await services.DbContext.SaveChangesAsync();
+        
+        return TypedResults.Ok();
     }
 }
-
-public record CreateOrderRequest(
-    string UserId,
-    string UserName,
-    string City,
-    string Street,
-    string State,
-    string Country,
-    string ZipCode,
-    string CardNumber,
-    string CardHolderName,
-    DateTime CardExpiration,
-    string CardSecurityNumber,
-    int CardTypeId,
-    string Buyer,
-    List<BasketItem> Items);

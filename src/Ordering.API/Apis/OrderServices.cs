@@ -1,11 +1,7 @@
 ﻿public class OrderServices(
-    IMediator mediator,
-    IOrderQueries queries,
-    IIdentityService identityService,
-    ILogger<OrderServices> logger)
+    OrderingContext dbContext,
+    IIdentityService identityService)
 {
-    public IMediator Mediator { get; set; } = mediator;
-    public ILogger<OrderServices> Logger { get; } = logger;
-    public IOrderQueries Queries { get; } = queries;
+    public OrderingContext DbContext { get; } = dbContext;
     public IIdentityService IdentityService { get; } = identityService;
 }

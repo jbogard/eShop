@@ -1,8 +1,10 @@
-﻿namespace eShop.Ordering.API.Extensions;
+﻿using eShop.Ordering.API.DTOs;
+
+namespace eShop.Ordering.API.Extensions;
 
 public static class BasketItemExtensions
 {
-    public static IEnumerable<OrderItemDTO> ToOrderItemsDTO(this IEnumerable<BasketItem> basketItems)
+    public static IEnumerable<OrderDraftModel.OrderItem> ToOrderItemsDTO(this IEnumerable<BasketItem> basketItems)
     {
         foreach (var item in basketItems)
         {
@@ -10,9 +12,9 @@ public static class BasketItemExtensions
         }
     }
 
-    public static OrderItemDTO ToOrderItemDTO(this BasketItem item)
+    public static OrderDraftModel.OrderItem ToOrderItemDTO(this BasketItem item)
     {
-        return new OrderItemDTO()
+        return new OrderDraftModel.OrderItem()
         {
             ProductId = item.ProductId,
             ProductName = item.ProductName,

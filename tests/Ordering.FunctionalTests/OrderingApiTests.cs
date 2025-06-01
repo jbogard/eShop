@@ -3,9 +3,8 @@ using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
 using Asp.Versioning.Http;
-using eShop.Ordering.API.Application.Commands;
-using eShop.Ordering.API.Application.Models;
-using eShop.Ordering.API.Application.Queries;
+using eShop.Ordering.API.DTOs;
+using eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace eShop.Ordering.FunctionalTests;
@@ -121,7 +120,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
     public async Task AddNewEmptyOrder()
     {
         // Act
-        var content = new StringContent(JsonSerializer.Serialize(new Order()), UTF8Encoding.UTF8, "application/json")
+        var content = new StringContent(JsonSerializer.Serialize(new OrderDto()), UTF8Encoding.UTF8, "application/json")
         {
             Headers = { { "x-requestid", Guid.Empty.ToString() } }
         };
@@ -136,18 +135,17 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
     public async Task AddNewOrder()
     {
         // Act
-        var item = new BasketItem
+        var item = new NewOrderModel.OrderItem()
         {
-            Id = "1",
             ProductId = 12,
             ProductName = "Test",
             UnitPrice = 10,
-            OldUnitPrice = 9,
-            Quantity = 1,
+            Units = 1,
             PictureUrl = null
         };
         var cardExpirationDate = Convert.ToDateTime("2023-12-22T12:34:24.334Z");
-        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, null, new List<BasketItem> { item });
+        var OrderRequest = new NewOrderModel("1", "TestUser", null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, null,
+            [item]);
         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
         {
             Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
@@ -196,7 +194,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
         var response = await _httpClient.PostAsync("api/orders/draft", content);
 
         var s = await response.Content.ReadAsStringAsync();
-        var responseData = JsonSerializer.Deserialize<OrderDraftDTO>(s, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var responseData = JsonSerializer.Deserialize<OrderDraftModel>(s, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(payload.Items.Count(), responseData.OrderItems.Count());
@@ -204,9 +202,9 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
         AssertThatOrderItemsAreTheSameAsRequestPayloadItems(payload, responseData);
     }
 
-    private CreateOrderDraftCommand FakeOrderDraftCommand()
+    private CreateOrderDraftModel FakeOrderDraftCommand()
     {
-        return new CreateOrderDraftCommand(
+        return new CreateOrderDraftModel(
             BuyerId: Guid.NewGuid().ToString(),
             new List<BasketItem>()
             {
@@ -223,7 +221,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             });
     }
 
-    private static void AssertThatOrderItemsAreTheSameAsRequestPayloadItems(CreateOrderDraftCommand payload, OrderDraftDTO responseData)
+    private static void AssertThatOrderItemsAreTheSameAsRequestPayloadItems(CreateOrderDraftModel payload, OrderDraftModel responseData)
     {
         // check that OrderItems contain all product Ids from the payload
         var payloadItemsProductIds = payload.Items.Select(x => x.ProductId);

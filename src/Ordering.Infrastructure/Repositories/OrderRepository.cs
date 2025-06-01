@@ -1,11 +1,8 @@
 ﻿namespace eShop.Ordering.Infrastructure.Repositories;
 
 public class OrderRepository
-    : IOrderRepository
 {
     private readonly OrderingContext _context;
-
-    public IUnitOfWork UnitOfWork => _context;
 
     public OrderRepository(OrderingContext context)
     {

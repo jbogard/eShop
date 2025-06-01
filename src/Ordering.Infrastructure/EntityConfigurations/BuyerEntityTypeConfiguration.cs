@@ -7,8 +7,6 @@ class BuyerEntityTypeConfiguration
     {
         buyerConfiguration.ToTable("buyers");
 
-        buyerConfiguration.Ignore(b => b.DomainEvents);
-
         buyerConfiguration.Property(b => b.Id)
             .UseHiLo("buyerseq");
 
@@ -18,7 +16,17 @@ class BuyerEntityTypeConfiguration
         buyerConfiguration.HasIndex("IdentityGuid")
             .IsUnique(true);
 
+        buyerConfiguration.HasIndex("IdentityGuid")
+            .IsUnique(true);
+
+        buyerConfiguration.Property(b => b.Name);
+
         buyerConfiguration.HasMany(b => b.PaymentMethods)
-            .WithOne();
+            .WithOne(pm => pm.Buyer)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        buyerConfiguration.HasMany(b => b.Orders)
+            .WithOne(o => o.Buyer)
+            .HasForeignKey(o => o.BuyerId);
     }
 }
