@@ -17,8 +17,7 @@ public class CancelOrderHandler : IRequestHandler<CancelOrderRequest, bool>
             return false;
         }
 
-        orderToUpdate.OrderStatus = OrderStatus.Cancelled;
-        orderToUpdate.Description = $"The order was cancelled.";
+        orderToUpdate.Cancel();
 
         await _orderingContext.SaveChangesAsync(cancellationToken);
 

@@ -16,7 +16,7 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
         foreach (var item in request.Items)
         {
             order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
-                item.PictureUrl);
+                item.PictureUrl, item.Units);
         }
 
         await dbContext.Orders.AddAsync(order);
@@ -31,26 +31,10 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
 
         if (!buyerExisted)
         {
-            buyer = new Buyer { IdentityGuid = request.UserId, Name = request.UserName };
+            buyer = new Buyer(identityGuid: request.UserId, name: request.UserName);
         }
 
-        var payment = buyer.PaymentMethods
-            .SingleOrDefault(p => p.IsEqualTo(cardTypeId, request.CardNumber, request.CardExpiration));
-
-        if (payment == null)
-        {
-            payment = new PaymentMethod
-            {
-                CardTypeId = cardTypeId,
-                Alias = $"Payment Method on {DateTime.UtcNow}",
-                CardNumber = request.CardNumber,
-                SecurityNumber = request.CardSecurityNumber,
-                CardHolderName = request.CardHolderName,
-                Expiration = request.CardExpiration
-            };
-
-            buyer.PaymentMethods.Add(payment);
-        }
+        var payment = buyer.VerifyOrAddPaymentMethod(cardTypeId, request.CardNumber, request.CardSecurityNumber, request.CardHolderName, request.CardExpiration);
 
         if (buyerExisted)
         {
@@ -63,10 +47,8 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
 
         await dbContext.SaveChangesAsync();
         
-        // Update order details with buyer information
-        order.Buyer = buyer;
-        order.PaymentId = payment.Id;
-        
+        order.AssignBuyerDetails(buyer, payment);
+
         dbContext.Orders.Update(order);
 
         await dbContext.SaveChangesAsync();

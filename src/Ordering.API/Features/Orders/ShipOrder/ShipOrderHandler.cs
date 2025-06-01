@@ -17,8 +17,7 @@ public class ShipOrderHandler : IRequestHandler<ShipOrderRequest, bool>
             return false;
         }
 
-        orderToUpdate.OrderStatus = OrderStatus.Shipped;
-        orderToUpdate.Description = "The order was shipped.";
+        orderToUpdate.Ship();
 
         await _orderingContext.SaveChangesAsync(cancellationToken);
 

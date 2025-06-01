@@ -5,6 +5,8 @@ namespace eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
 public class Order
     : Entity
 {
+    private readonly List<OrderItem> _orderItems = new();
+
     protected Order()
     {
     }
@@ -33,15 +35,15 @@ public class Order
 
     public int? BuyerId { get; private set; }
 
-    public Buyer Buyer { get; set; }
+    public Buyer Buyer { get; private set; }
 
-    public OrderStatus OrderStatus { get; set; }
+    public OrderStatus OrderStatus { get; private set; }
     
-    public string Description { get; set; }
-    
-    public ICollection<OrderItem> OrderItems { get; } = new List<OrderItem>();
+    public string Description { get; private set; }
 
-    public int? PaymentId { get; set; }
+    public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
+
+    public int? PaymentId { get; private set; }
 
     public void AddOrderItem(int productId, string productName, decimal unitPrice, decimal discount,
         string pictureUrl, int units = 1)
@@ -62,10 +64,28 @@ public class Order
         {
             var orderItem = new OrderItem(productName, pictureUrl, unitPrice, discount, units, productId);
             
-            OrderItems.Add(orderItem);
+            _orderItems.Add(orderItem);
         }
     }
 
     public decimal GetTotal() 
         => OrderItems.Sum(orderItem => orderItem.GetPrice());
+
+    public void Ship()
+    {
+        OrderStatus = OrderStatus.Shipped;
+        Description = "The order was shipped.";
+    }
+
+    public void Cancel()
+    {
+        OrderStatus = OrderStatus.Cancelled;
+        Description = $"The order was cancelled.";
+    }
+
+    public void AssignBuyerDetails(Buyer buyer, PaymentMethod payment)
+    {
+        Buyer = buyer;
+        PaymentId = payment.Id;
+    }
 }
