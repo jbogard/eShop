@@ -15,8 +15,8 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
         var order = Order.NewOrder(address: address);
         foreach (var item in request.Items)
         {
-            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
-                item.PictureUrl, item.Units);
+            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, 0m,
+                item.PictureUrl, item.Quantity);
         }
 
         await dbContext.Orders.AddAsync(order);
