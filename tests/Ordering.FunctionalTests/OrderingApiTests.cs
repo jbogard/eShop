@@ -4,6 +4,9 @@ using System.Text.Json;
 using Asp.Versioning;
 using Asp.Versioning.Http;
 using eShop.Ordering.API.DTOs;
+using eShop.Ordering.API.Features.Orders.CreateOrder;
+using eShop.Ordering.API.Features.Orders.CreateOrderDraft;
+using eShop.Ordering.API.Features.Orders.GetOrder;
 using eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -135,7 +138,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
     public async Task AddNewOrder()
     {
         // Act
-        var item = new NewOrderModel.OrderItem()
+        var item = new CreateOrderRequest.OrderItem()
         {
             ProductId = 12,
             ProductName = "Test",
@@ -144,7 +147,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             PictureUrl = null
         };
         var cardExpirationDate = Convert.ToDateTime("2023-12-22T12:34:24.334Z");
-        var OrderRequest = new NewOrderModel("1", "TestUser", null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, null,
+        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, null, null, null, null, "XXXXXXXXXXXX0005", "Test User", cardExpirationDate, "test buyer", 1, null,
             [item]);
         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
         {
@@ -202,9 +205,9 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
         AssertThatOrderItemsAreTheSameAsRequestPayloadItems(payload, responseData);
     }
 
-    private CreateOrderDraftModel FakeOrderDraftCommand()
+    private CreateOrderDraftRequest FakeOrderDraftCommand()
     {
-        return new CreateOrderDraftModel(
+        return new CreateOrderDraftRequest(
             BuyerId: Guid.NewGuid().ToString(),
             new List<BasketItem>()
             {
@@ -221,7 +224,7 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             });
     }
 
-    private static void AssertThatOrderItemsAreTheSameAsRequestPayloadItems(CreateOrderDraftModel payload, OrderDraftModel responseData)
+    private static void AssertThatOrderItemsAreTheSameAsRequestPayloadItems(CreateOrderDraftRequest payload, OrderDraftModel responseData)
     {
         // check that OrderItems contain all product Ids from the payload
         var payloadItemsProductIds = payload.Items.Select(x => x.ProductId);

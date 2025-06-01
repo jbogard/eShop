@@ -1,6 +1,6 @@
-using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+﻿using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
-namespace eShop.Ordering.API.DTOs;
+namespace eShop.Ordering.API.Features.Orders.CreateOrderDraft;
 
 public record OrderDraftModel
 {

@@ -1,6 +1,6 @@
-﻿namespace eShop.Ordering.API.DTOs;
+﻿namespace eShop.Ordering.API.Features.Orders.CreateOrder;
 
-public record NewOrderModel(
+public record CreateOrderRequest(
     string UserId,
     string UserName,
     string City,
@@ -14,7 +14,7 @@ public record NewOrderModel(
     string CardSecurityNumber,
     int CardTypeId,
     string Buyer,
-    List<NewOrderModel.OrderItem> Items)
+    List<CreateOrderRequest.OrderItem> Items) : IRequest
 {
     public record OrderItem
     {
