@@ -1,5 +1,3 @@
-using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
-
 namespace eShop.Ordering.API.Features.Orders.GetOrders;
 
 public class GetOrdersHandler : IRequestHandler<GetOrdersRequest, IEnumerable<OrderSummaryDto>>
@@ -27,7 +25,7 @@ public class GetOrdersHandler : IRequestHandler<GetOrdersRequest, IEnumerable<Or
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = OrderManager.GetTotal(o)
+                Total = o.GetTotal()
             })
             .ToList();
 

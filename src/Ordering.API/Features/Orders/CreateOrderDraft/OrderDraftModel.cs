@@ -1,6 +1,4 @@
-﻿using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
-
-namespace eShop.Ordering.API.Features.Orders.CreateOrderDraft;
+﻿namespace eShop.Ordering.API.Features.Orders.CreateOrderDraft;
 
 public record OrderDraftModel
 {
@@ -20,7 +18,7 @@ public record OrderDraftModel
                 Units = oi.Units,
                 ProductName = oi.ProductName
             }),
-            Total = OrderManager.GetTotal(order)
+            Total = order.GetTotal()
         };
     }
     

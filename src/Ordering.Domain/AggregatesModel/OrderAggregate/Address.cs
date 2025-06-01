@@ -1,10 +1,10 @@
 ﻿namespace eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
 
-public class Address
+public record Address
 {
-    public string Street { get; set; }
-    public string City { get; set; }
-    public string State { get; set; }
-    public string Country { get; set; }
-    public string ZipCode { get; set; }
+    public string Street { get; init; }
+    public string City { get; init; }
+    public string State { get; init; }
+    public string Country { get; init; }
+    public string ZipCode { get; init; }
 }

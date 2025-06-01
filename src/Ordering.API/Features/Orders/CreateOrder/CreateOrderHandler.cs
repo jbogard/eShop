@@ -1,5 +1,3 @@
-using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
-
 namespace eShop.Ordering.API.Features.Orders.CreateOrder;
 
 public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<CreateOrderRequest>
@@ -14,10 +12,10 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
             Country = request.Country,
             ZipCode = request.ZipCode
         };
-        var order = new Order { OrderStatus = OrderStatus.Submitted, OrderDate = DateTime.UtcNow, Address = address };
+        var order = Order.NewOrder(address: address);
         foreach (var item in request.Items)
         {
-            OrderManager.AddOrderItem(order, item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
+            order.AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
                 item.PictureUrl);
         }
 

@@ -1,5 +1,4 @@
 using eShop.Ordering.API.DTOs;
-using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 namespace eShop.Ordering.API.Features.Orders.GetOrder;
 
@@ -33,7 +32,7 @@ public class GetOrderHandler : IRequestHandler<GetOrderRequest, OrderDto>
             Street = order.Address.Street,
             Zipcode = order.Address.ZipCode,
             Status = order.OrderStatus.ToString(),
-            Total = OrderManager.GetTotal(order),
+            Total = order.GetTotal(),
             OrderItems = order.OrderItems.Select(oi => new OrderItemDto
             {
                 ProductName = oi.ProductName,
