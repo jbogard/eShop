@@ -23,5 +23,10 @@ internal static class Extensions
         
         services.AddHttpContextAccessor();
         services.AddTransient<IIdentityService, IdentityService>();
+        
+        services.AddMediatR(options =>
+        {
+            options.RegisterServicesFromAssemblyContaining<Program>();
+        });
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using eShop.Ordering.API.DTOs;
+using eShop.Ordering.API.Features.Orders.GetOrders;
+using eShop.Ordering.API.Features.Orders.ShipOrder;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 
@@ -10,9 +12,9 @@ public static class OrdersApi
         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
 
         api.MapPut("/cancel", CancelOrderAsync);
-        api.MapPut("/ship", ShipOrderAsync);
+        api.MapPut("/ship", ShipOrdersApi.ShipOrderAsync);
         api.MapGet("{orderId:int}", GetOrderAsync);
-        api.MapGet("/", GetOrdersByUserAsync);
+        api.MapGet("/", GetOrdersApi.GetOrdersByUserAsync);
         api.MapGet("/cardtypes", GetCardTypesAsync);
         api.MapPost("/draft", CreateOrderDraftAsync);
         api.MapPost("/", CreateOrderAsync);
@@ -39,30 +41,6 @@ public static class OrdersApi
         }
 
         order.OrderStatus = OrderStatus.Cancelled;
-
-        await services.DbContext.SaveChangesAsync();
-
-        return TypedResults.Ok();
-    }
-
-    public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> ShipOrderAsync(
-        ShipOrderModel model,
-        [AsParameters] OrderServices services)
-    {
-        var order = await services.DbContext.Orders.FindAsync(model.OrderNumber);
-
-        if (order != null)
-        {
-            await services.DbContext.Orders.Entry(order)
-                .Collection(i => i.OrderItems).LoadAsync();
-        }
-
-        if (order == null)
-        {
-            return TypedResults.BadRequest("Cannot find order");
-        }
-
-        order.OrderStatus = OrderStatus.Shipped;
 
         await services.DbContext.SaveChangesAsync();
 
@@ -108,25 +86,6 @@ public static class OrdersApi
         {
             return TypedResults.NotFound();
         }
-    }
-
-    public static async Task<Ok<IEnumerable<OrderSummaryDto>>> GetOrdersByUserAsync(
-        [AsParameters] OrderServices services)
-    {
-        var userId = services.IdentityService.GetUserIdentity();
-        IEnumerable<OrderSummaryDto> orders = await services.DbContext
-            .Orders
-            .Where(o => o.Buyer.IdentityGuid == userId)
-            .Select(o => new OrderSummaryDto
-            {
-                OrderNumber = o.Id,
-                Date = o.OrderDate,
-                Status = o.OrderStatus.ToString(),
-                Total = (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units)
-            })
-            .ToListAsync();
-
-        return TypedResults.Ok(orders);
     }
 
     public static async Task<Ok<IEnumerable<CardTypeDto>>> GetCardTypesAsync([AsParameters] OrderServices services)
