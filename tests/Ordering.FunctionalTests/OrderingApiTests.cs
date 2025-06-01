@@ -138,12 +138,12 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
     public async Task AddNewOrder()
     {
         // Act
-        var item = new CreateOrderRequest.OrderItem()
+        var item = new BasketItem()
         {
             ProductId = 12,
             ProductName = "Test",
             UnitPrice = 10,
-            Units = 1,
+            Quantity = 1,
             PictureUrl = null
         };
         var cardExpirationDate = Convert.ToDateTime("2023-12-22T12:34:24.334Z");
