@@ -113,7 +113,7 @@ public static class OrdersApi
     }
 
     public static async Task<Results<Ok, BadRequest<string>>> CreateOrderAsync(
-        NewOrderModel model,
+        CreateOrderRequest model,
         [AsParameters] OrderServices services)
     {
         var address = new Address
@@ -127,8 +127,8 @@ public static class OrdersApi
         var order = new Order { OrderStatus = OrderStatus.Submitted, OrderDate = DateTime.UtcNow, Address = address };
         foreach (var item in model.Items)
         {
-            OrderManager.AddOrderItem(order, item.ProductId, item.ProductName, item.UnitPrice, item.Discount,
-                item.PictureUrl);
+            OrderManager.AddOrderItem(order, item.ProductId, item.ProductName, item.UnitPrice, 0m,
+                item.PictureUrl, item.Quantity);
         }
 
         await services.DbContext.Orders.AddAsync(order);
@@ -186,3 +186,19 @@ public static class OrdersApi
         return TypedResults.Ok();
     }
 }
+
+public record CreateOrderRequest(
+    string UserId,
+    string UserName,
+    string City,
+    string Street,
+    string State,
+    string Country,
+    string ZipCode,
+    string CardNumber,
+    string CardHolderName,
+    DateTime CardExpiration,
+    string CardSecurityNumber,
+    int CardTypeId,
+    string Buyer,
+    List<BasketItem> Items);
