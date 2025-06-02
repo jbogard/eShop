@@ -21,7 +21,7 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
 
         await dbContext.Orders.AddAsync(order);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveEntitiesAsync();
 
         var cardTypeId = request.CardTypeId != 0 ? request.CardTypeId : 1;
         var buyer = await dbContext.Buyers
@@ -45,12 +45,12 @@ public class CreateOrderHandler(OrderingContext dbContext) : IRequestHandler<Cre
             dbContext.Buyers.Add(buyer);
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveEntitiesAsync();
         
         order.AssignBuyerDetails(buyer, payment);
 
         dbContext.Orders.Update(order);
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveEntitiesAsync();
     }
 }
