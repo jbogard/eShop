@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using eShop.Ordering.Domain.Events;
 
 namespace eShop.Ordering.Domain.AggregatesModel.BuyerAggregate;
 
@@ -24,7 +25,7 @@ public class Buyer
     public ICollection<Order> Orders { get; } = new List<Order>();
 
     public PaymentMethod VerifyOrAddPaymentMethod(int cardTypeId, string cardNumber, string cardSecurityNumber,
-        string cardHolderName, DateTime cardExpiration)
+        string cardHolderName, DateTime cardExpiration, int orderId)
     {
         var payment = PaymentMethods
             .SingleOrDefault(p => p.IsEqualTo(cardTypeId, cardNumber, cardExpiration));
@@ -43,6 +44,13 @@ public class Buyer
 
             PaymentMethods.Add(payment);
         }
+        
+        AddDomainEvent(new BuyerAndPaymentMethodVerifiedDomainEvent
+        {
+            Buyer = this,
+            Payment = payment,
+            OrderId = orderId 
+        });
 
         return payment;
     }

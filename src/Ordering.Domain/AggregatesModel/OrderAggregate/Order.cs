@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using eShop.Ordering.Domain.Commands;
+using eShop.Ordering.Domain.Events;
 
 namespace eShop.Ordering.Domain.AggregatesModel.OrderAggregate;
 
@@ -7,25 +9,43 @@ public class Order
 {
     private readonly List<OrderItem> _orderItems = new();
 
-    protected Order()
+    protected Order() { }
+    
+    public Order(ICreateOrderCommand request)
     {
-    }
-
-    private Order(Address address)
-    {
+        var address = new Address
+        {
+            Street = request.Street,
+            City = request.City,
+            State = request.State,
+            Country = request.Country,
+            ZipCode = request.ZipCode
+        };
+        Address = address;
         OrderStatus = OrderStatus.Submitted;
         OrderDate = DateTime.UtcNow;
-        Address = address;
-    }
 
+        foreach (var item in request.Items)
+        {
+            AddOrderItem(item.ProductId, item.ProductName, item.UnitPrice, 0m, item.PictureUrl, item.Quantity);
+        }
+
+        AddDomainEvent(new OrderStartedDomainEvent
+        {
+            Order = this,
+            CardSecurityNumber = request.CardSecurityNumber,
+            CardTypeId = request.CardTypeId,
+            CardExpiration = request.CardExpiration,
+            CardNumber = request.CardNumber,
+            UserId = request.UserId,
+            UserName = request.UserName,
+            CardHolderName = request.CardHolderName
+        });
+    }
+    
     public static Order NewDraft()
     {
         return new Order();
-    }
-
-    public static Order NewOrder(Address address)
-    {
-        return new Order(address);
     }
 
     public DateTime OrderDate { get; private set; }

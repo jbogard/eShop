@@ -1,4 +1,5 @@
 ﻿using eShop.Ordering.API.DTOs;
+using eShop.Ordering.Domain.Commands;
 
 namespace eShop.Ordering.API.Features.Orders.CreateOrder;
 
@@ -16,4 +17,7 @@ public record CreateOrderRequest(
     string CardSecurityNumber,
     int CardTypeId,
     string Buyer,
-    List<BasketItem> Items) : IRequest;
+    List<BasketItem> Items) : IRequest, ICreateOrderCommand
+{
+    IEnumerable<ICreateOrderCommand.IOrderItem> ICreateOrderCommand.Items => Items;
+}

@@ -1,6 +1,8 @@
-﻿namespace eShop.Ordering.API.DTOs;
+﻿using eShop.Ordering.Domain.Commands;
 
-public class BasketItem
+namespace eShop.Ordering.API.DTOs;
+
+public class BasketItem : ICreateOrderCommand.IOrderItem
 {
     public string Id { get; init; }
     public int ProductId { get; init; }
