@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+﻿using eShop.Ordering.API.Infrastructure.Behaviors;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 internal static class Extensions
 {
@@ -27,6 +28,12 @@ internal static class Extensions
         services.AddMediatR(options =>
         {
             options.RegisterServicesFromAssemblyContaining<Program>();
+            
+            options.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            options.AddOpenBehavior(typeof(ValidatorBehavior<,>));
+            options.AddOpenBehavior(typeof(TransactionBehavior<,>));
         });
+        
+        services.AddValidatorsFromAssemblyContaining<Program>();
     }
 }
