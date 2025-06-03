@@ -11,6 +11,8 @@ var withApiVersioning = builder.Services.AddApiVersioning();
 
 builder.AddDefaultOpenApi(withApiVersioning);
 
+builder.UseNServiceBusWithConventions("catalog-api", "eventbus", "catalogdb");
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();

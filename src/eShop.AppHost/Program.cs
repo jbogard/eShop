@@ -2,11 +2,15 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var rmqPassword = builder.AddParameter("messaging-password");
+
 builder.AddForwardedHeaders();
 
 var redis = builder.AddRedis("redis");
 var rabbitMq = builder.AddRabbitMQ("eventbus")
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithManagementPlugin(port: 15672);
+
 var postgres = builder.AddPostgres("postgres")
     .WithImage("ankane/pgvector")
     .WithImageTag("latest")

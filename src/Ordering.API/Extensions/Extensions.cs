@@ -33,7 +33,7 @@ internal static class Extensions
             options.AddOpenBehavior(typeof(ValidatorBehavior<,>));
             options.AddOpenBehavior(typeof(TransactionBehavior<,>));
         });
-        
+
         services.AddValidatorsFromAssemblyContaining<Program>();
     }
 }

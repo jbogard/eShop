@@ -1,8 +1,10 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddApplicationServices();
 builder.Services.AddProblemDetails();
+
+builder.UseNServiceBusWithConventions("ordering-api", "eventbus", "orderingdb");
 
 var withApiVersioning = builder.Services.AddApiVersioning();
 
@@ -18,4 +20,5 @@ orders.MapOrdersApiV1()
       .RequireAuthorization();
 
 app.UseDefaultOpenApi();
+
 app.Run();
