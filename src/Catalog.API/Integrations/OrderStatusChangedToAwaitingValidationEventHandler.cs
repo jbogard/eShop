@@ -1,3 +1,4 @@
+using eShop.Catalog.Contracts;
 using eShop.Ordering.Contracts;
 
 namespace eShop.Catalog.API.Integrations;
@@ -11,8 +12,26 @@ public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessage
         _catalogContext = catalogContext;
     }
 
-    public Task Handle(OrderAwaitingValidationEvent message, IMessageHandlerContext context)
+    public async Task Handle(OrderAwaitingValidationEvent message, IMessageHandlerContext context)
     {
-        return Task.CompletedTask;
+        foreach (var orderStockItem in message.OrderItems)
+        {
+            var catalogItem = await _catalogContext.CatalogItems.FindAsync([orderStockItem.ProductId], context.CancellationToken);
+            var hasStock = catalogItem!.AvailableStock >= orderStockItem.Quantity;
+
+            if (!hasStock)
+            {
+                await context.Publish(new OrderStockRejectedEvent
+                {
+                    OrderId = message.OrderId
+                });
+                return;
+            }
+        }
+
+        await context.Publish(new OrderStockConfirmedEvent
+        {
+            OrderId = message.OrderId
+        });
     }
 }

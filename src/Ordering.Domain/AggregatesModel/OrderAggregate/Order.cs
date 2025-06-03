@@ -107,6 +107,8 @@ public class Order
     {
         Buyer = buyer;
         PaymentId = payment.Id;
+        
+        AddDomainEvent(new OrderAwaitingValidationDomainEvent { Order = this });
     }
     
     public void MarkOrderAsStockConfirmed()
