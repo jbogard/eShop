@@ -14,11 +14,11 @@ public class TransactionSessionBehavior<TRequest, TResponse> : IPipelineBehavior
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         await _transactionalSession.Open(new SqlPersistenceOpenSessionOptions(), cancellationToken);
-
+        
         var response = await next();
 
         await _transactionalSession.Commit(cancellationToken);
-
+        
         return response;
     }
 }

@@ -1,13 +1,14 @@
 using eShop.Ordering.Contracts;
 using eShop.Ordering.Domain.Events;
+using NServiceBus.TransactionalSession;
 
 namespace eShop.Ordering.API.Features.Orders.DomainEventHandlers;
 
 public class PublishOrderAwaitingValidationFromDomainEventHandler : INotificationHandler<OrderAwaitingValidationDomainEvent>
 {
-    private readonly IMessageSession _messageSession;
+    private readonly ITransactionalSession _messageSession;
 
-    public PublishOrderAwaitingValidationFromDomainEventHandler(IMessageSession messageSession)
+    public PublishOrderAwaitingValidationFromDomainEventHandler(ITransactionalSession messageSession)
     {
         _messageSession = messageSession;
     }
@@ -24,7 +25,7 @@ public class PublishOrderAwaitingValidationFromDomainEventHandler : INotificatio
                 }
             ).ToList()
         };
-
+        
         await _messageSession.Publish(message, cancellationToken);
     }
 }
