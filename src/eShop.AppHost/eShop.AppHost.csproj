@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Catalog.API\Catalog.API.csproj" />
     <ProjectReference Include="..\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Ordering.API\Ordering.API.csproj" />
+    <ProjectReference Include="..\Shipping.MessageEndpoint\Shipping.MessageEndpoint.csproj" />
     <ProjectReference Include="..\WebApp\WebApp.csproj" />
   </ItemGroup>
 

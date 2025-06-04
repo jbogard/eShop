@@ -3,7 +3,7 @@ using eShop.Ordering.Contracts;
 
 namespace eShop.Catalog.API.Integrations;
 
-public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessages<OrderAwaitingValidationEvent>
+public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessages<OrderDetailsConfirmedEvent>
 {
     private readonly CatalogContext _catalogContext;
 
@@ -12,7 +12,7 @@ public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessage
         _catalogContext = catalogContext;
     }
 
-    public async Task Handle(OrderAwaitingValidationEvent message, IMessageHandlerContext context)
+    public async Task Handle(OrderDetailsConfirmedEvent message, IMessageHandlerContext context)
     {
         foreach (var orderStockItem in message.OrderItems)
         {
@@ -28,6 +28,8 @@ public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessage
                 return;
             }
         }
+        
+        Thread.Sleep(TimeSpan.FromMinutes(1));
 
         await context.Publish(new OrderStockConfirmedEvent
         {
