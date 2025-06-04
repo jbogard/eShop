@@ -13,6 +13,10 @@ public class OrderStatusChangedToAwaitingValidationEventHandler : IHandleMessage
 
     public Task Handle(OrderAwaitingValidationEvent message, IMessageHandlerContext context)
     {
+        // Foreach order item, find the stock item and verify the stock details
+        // If any do not have stock, publish OrderStockRejectedEvent
+        // If all have stock, publish OrderStockConfirmedEvent
+        
         return Task.CompletedTask;
     }
 }

@@ -6,6 +6,7 @@ public class MarkOrderConfirmedWhenOrderConfirmedHandler : IHandleMessages<Order
 {
     public Task Handle(OrderStockConfirmedEvent message, IMessageHandlerContext context)
     {
+        // Load order, mark as stock confirmed
         return Task.CompletedTask;
     }
 }

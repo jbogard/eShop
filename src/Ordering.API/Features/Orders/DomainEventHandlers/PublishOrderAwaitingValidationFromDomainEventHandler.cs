@@ -6,6 +6,8 @@ public class PublishOrderAwaitingValidationFromDomainEventHandler : INotificatio
 {
     public Task Handle(OrderAwaitingValidationDomainEvent notification, CancellationToken cancellationToken)
     {
+        // Publish OrderAwaitingValidation NServiceBus Event
+        // IMessageSession.Publish
         return Task.CompletedTask;
     }
 }

@@ -6,6 +6,7 @@ public class MarkOrderCancelledWhenStockRejectedHandler : IHandleMessages<OrderS
 {
     public Task Handle(OrderStockRejectedEvent message, IMessageHandlerContext context)
     {
+        // Load order, mark as rejected
         return Task.CompletedTask;
     }
 }
