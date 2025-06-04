@@ -61,6 +61,7 @@ public static partial class Extensions
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
+                    .AddMeter("NServiceBus.*")
                     .AddMeter("Experimental.Microsoft.Extensions.AI");
             })
             .WithTracing(tracing =>
@@ -74,6 +75,8 @@ public static partial class Extensions
                 tracing.AddAspNetCoreInstrumentation()
                     .AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation(options => options.SetDbStatementForText = true)
+                    .AddSource("NServiceBus.*")
                     .AddSource("Experimental.Microsoft.Extensions.AI");                    
             });
 

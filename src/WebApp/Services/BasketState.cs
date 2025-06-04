@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using eShop.WebAppComponents.Catalog;
@@ -81,9 +82,12 @@ public class BasketState(
         {
             checkoutInfo.RequestId = Guid.NewGuid();
         }
-
+        
         var buyerId = await authenticationStateProvider.GetBuyerIdAsync() ?? throw new InvalidOperationException("User does not have a buyer ID");
         var userName = await authenticationStateProvider.GetUserNameAsync() ?? throw new InvalidOperationException("User does not have a user name");
+
+        Activity.Current?.AddTag("userid", buyerId);
+        Activity.Current?.AddTag("username", userName);
 
         // Get details for the items in the basket
         var orderItems = await FetchBasketItemsAsync();
