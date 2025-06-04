@@ -15,10 +15,10 @@ public class PublishOrderAwaitingValidationFromDomainEventHandler : INotificatio
     
     public async Task Handle(OrderAwaitingValidationDomainEvent notification, CancellationToken cancellationToken)
     {
-        var message = new OrderAwaitingValidationEvent
+        var message = new OrderDetailsConfirmedEvent
         {
             OrderId = notification.Order.Id,
-            OrderItems = notification.Order.OrderItems.Select(item => new OrderAwaitingValidationEvent.OrderItem
+            OrderItems = notification.Order.OrderItems.Select(item => new OrderDetailsConfirmedEvent.OrderItem
                 {
                     ProductId = item.ProductId,
                     Quantity = item.Units

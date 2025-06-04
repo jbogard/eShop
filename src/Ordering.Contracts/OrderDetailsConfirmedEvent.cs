@@ -2,7 +2,7 @@
 
 namespace eShop.Ordering.Contracts;
 
-public class OrderAwaitingValidationEvent : IEvent
+public class OrderDetailsConfirmedEvent : IEvent
 {
     public class OrderItem
     {
