@@ -1,6 +1,8 @@
 using Npgsql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using NpgsqlTypes;
+using NServiceBus.TransactionalSession;
 
 namespace eShop.ServiceDefaults;
 
@@ -29,8 +31,18 @@ public static class EndpointConfigurationService
         var dbConnectionString = builder.Configuration.GetConnectionString(postgresConnectionStringName);
         var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
         var dialect = persistence.SqlDialect<SqlDialect.PostgreSql>();
+        dialect.JsonBParameterModifier(
+            modifier: parameter =>
+            {
+                var npgsqlParameter = (NpgsqlParameter)parameter;
+                npgsqlParameter.NpgsqlDbType = NpgsqlDbType.Jsonb;
+            });
         
         persistence.ConnectionBuilder(() => new NpgsqlConnection(dbConnectionString));
+
+        persistence.EnableTransactionalSession();
+        
+        endpointConfiguration.EnableOutbox();
 
         // Message serialization
         endpointConfiguration.UseSerialization<SystemJsonSerializer>();

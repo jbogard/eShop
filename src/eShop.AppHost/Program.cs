@@ -1,4 +1,5 @@
 ﻿using eShop.AppHost;
+#pragma warning disable ASPIREPROXYENDPOINTS001
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -9,7 +10,8 @@ builder.AddForwardedHeaders();
 var redis = builder.AddRedis("redis");
 var rabbitMq = builder.AddRabbitMQ("eventbus")
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithManagementPlugin(port: 15672);
+    .WithManagementPlugin(port: 15672)
+    .WithEndpointProxySupport(false);
 
 var postgres = builder.AddPostgres("postgres")
     .WithImage("ankane/pgvector")

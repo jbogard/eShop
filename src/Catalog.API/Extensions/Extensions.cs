@@ -1,5 +1,7 @@
 ﻿using eShop.Catalog.API.Services;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using NServiceBus.Persistence;
+using NServiceBus.Persistence.Sql;
 
 public static class Extensions
 {
@@ -13,13 +15,39 @@ public static class Extensions
             return;
         }
 
-        builder.AddNpgsqlDbContext<CatalogContext>("catalogdb", configureDbContextOptions: options =>
+        builder.Services.AddScoped(b =>
         {
-            options.UseNpgsql(builder =>
+            
+            if (b.GetService<ISynchronizedStorageSession>() is ISqlStorageSession { Connection: not null } session)
             {
-                builder.UseVector();
-            });
-            options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+                var options = new DbContextOptionsBuilder<CatalogContext>();
+                options.UseNpgsql(session.Connection, npgsqlOptions =>
+                {
+                    npgsqlOptions.UseVector();
+                });
+                options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                var context = new CatalogContext(options.Options, builder.Configuration);
+
+                context.Database.UseTransaction(session.Transaction);
+
+                session.OnSaveChanges((s, cancellationToken) => context.SaveChangesAsync(cancellationToken));
+
+                return context;
+            }
+            else
+            {
+                var options = new DbContextOptionsBuilder<CatalogContext>();
+                options.UseNpgsql(builder.Configuration.GetConnectionString("catalogdb"), npgsqlOptions =>
+                {
+                    npgsqlOptions.UseVector();
+                });
+                options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                var context = new CatalogContext(options.Options, builder.Configuration);
+
+                return context;
+            }
         });
 
         // REVIEW: This is done for development ease but shouldn't be here in production
