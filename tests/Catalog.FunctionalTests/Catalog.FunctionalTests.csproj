@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="9.2.0" />
-
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.4.2" />
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <IsPublishable>false</IsPublishable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Http.Client" />
     <PackageReference Include="Aspire.Hosting.AppHost" />
@@ -20,9 +18,7 @@
     </PackageReference>
     <PackageReference Include="xunit" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Catalog.API\Catalog.API.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
-
 </Project>
