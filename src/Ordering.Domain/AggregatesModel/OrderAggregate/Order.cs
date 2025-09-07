@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using eShop.Ordering.Domain.Commands;
 using eShop.Ordering.Domain.Events;
 
