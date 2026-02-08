@@ -51,8 +51,6 @@ public static class EndpointConfigurationService
         // https://docs.particular.net/nservicebus/operations/installers
         endpointConfiguration.EnableInstallers();
         
-        endpointConfiguration.EnableOpenTelemetry();
-        
         builder.UseNServiceBus(endpointConfiguration);
         
         return builder;
