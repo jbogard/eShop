@@ -104,11 +104,11 @@
     <PackageVersion Include="IdentityModel" Version="7.0.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.0.26" />
     <!-- NServiceBus -->
-    <PackageVersion Include="NServiceBus" Version="9.2.7" />
+    <PackageVersion Include="NServiceBus" Version="10.1.0" />
     <PackageVersion Include="NServiceBus.MessageInterfaces" Version="1.0.0" />
-    <PackageVersion Include="NServiceBus.Extensions.Hosting" Version="3.0.1" />
-    <PackageVersion Include="NServiceBus.Persistence.Sql" Version="8.1.2" />
-    <PackageVersion Include="NServiceBus.Persistence.Sql.TransactionalSession" Version="8.1.2" />
-    <PackageVersion Include="NServiceBus.RabbitMQ" Version="10.1.2" />
+    <PackageVersion Include="NServiceBus.Extensions.Hosting" Version="4.0.0" />
+    <PackageVersion Include="NServiceBus.Persistence.Sql" Version="9.0.0" />
+    <PackageVersion Include="NServiceBus.Persistence.Sql.TransactionalSession" Version="9.0.0" />
+    <PackageVersion Include="NServiceBus.RabbitMQ" Version="11.0.0" />
   </ItemGroup>
 </Project>
