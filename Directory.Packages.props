@@ -48,6 +48,7 @@
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.1.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.8.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.8.2" />
+    <PackageVersion Include="Npgsql" Version="10.0.1" />
     <!-- Version together with EF -->
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
@@ -89,11 +90,11 @@
     <PackageVersion Include="Grpc.Net.ClientFactory" Version="$(GrpcVersion)" />
     <PackageVersion Include="Grpc.Tools" Version="$(GrpcVersion)" PrivateAssets="All" />
     <!-- Miscellaneous -->
-    <PackageVersion Include="Automapper" Version="14.0.0" />
+    <PackageVersion Include="Automapper" Version="16.0.0" />
     <PackageVersion Include="Dapper" Version="2.1.35" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.33.0" />
-    <PackageVersion Include="MediatR" Version="12.5.0" />
+    <PackageVersion Include="MediatR" Version="14.0.0" />
     <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
     <PackageVersion Include="Polly.Core" Version="8.6.4" />
     <PackageVersion Include="System.Reflection.TypeExtensions" Version="4.7.0" />
